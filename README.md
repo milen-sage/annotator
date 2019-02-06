@@ -25,7 +25,6 @@ Clone the [source code repository](https://github.com/Sage-Bionetworks/annotator
 
     git clone https://github.com/Sage-Bionetworks/annotator.git
     cd annotator
-    git checkout develop
     python setup.py install
 
 ## Example Usage
