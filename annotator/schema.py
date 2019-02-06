@@ -101,11 +101,6 @@ def flattenJson(path, module=None):
         if list(flatten_df.columns).count("name") > 1:
             flatten_df.columns = ['index', 'columnType', 'description', 'maximumSize', 'name', 'valueDescription', 'value', 'source', 'module'] 
 
-            #columns_map = dict(zip(flatten_df.columns, ['index', 'columnType', 'description', 'maximumSize', 'name', 'valueDescription', 'value', 'source', 'module']))
-            #flatten_df.rename(columns = columns_map, inplace = True)
-            print(flatten_df)
-        
-
         flatten_df.set_index(flatten_df['name'], inplace=True)
         flatten_vals.append(flatten_df)
 
