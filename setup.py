@@ -3,6 +3,7 @@ import requests
 
 reqRelease = requests.get("https://api.github.com/repos/Sage-Bionetworks/annotator/releases")
 releaseVersion = reqRelease.json()[0]['tag_name']
+
 __version__=str(releaseVersion[1:len(releaseVersion)])
 
 setup(
@@ -18,6 +19,7 @@ setup(
         'console_scripts': ['annotator = annotator.__main__:main']
     },
     install_requires=[
+        'typing <= 3.5',
         'pandas',
         'synapseclient'],
     tests_require=['pytest'])
