@@ -1,6 +1,7 @@
 from __future__ import unicode_literals
 import os
 import requests
+from requests.auth import HTTPBasicAuth
 import json
 import pandas as pd
 from . import utils
@@ -16,7 +17,6 @@ def getAnnotationsRelease():
     """
     reqRelease = requests.get("https://api.github.com/repos/Sage-Bionetworks/synapseAnnotations/releases")
     releaseVersion = reqRelease.json()[0]['tag_name']
-
     return releaseVersion
 
 
@@ -41,7 +41,7 @@ def moduleJsonPath(releaseVersion=None):
         releaseVersion = getAnnotationsRelease()
 
     gitPath = 'https://api.github.com/repos/Sage-Bionetworks/synapseAnnotations/contents/synapseAnnotations/data/?ref='
-    req = requests.get(gitPath + releaseVersion)
+    req = requests.get(gitPath + releaseVersion) 
     file_list = json.loads(req.content)
     names = {os.path.splitext(x['name'])[0]: x['download_url'] for x in file_list}
 
@@ -95,11 +95,22 @@ def flattenJson(path, module=None):
         flatten_df = pd.concat([repeats, normalized_values_df], axis=1)
         # add column module for annotating the annotations
         flatten_df['module'] = module
+        '''
+         hacky ... script assumes unique column names... our json model doesn't enforce/require that; might need to change assumptions or json model
+        '''
+        if list(flatten_df.columns).count("name") > 1:
+            flatten_df.columns = ['index', 'columnType', 'description', 'maximumSize', 'name', 'valueDescription', 'value', 'source', 'module'] 
+
+            #columns_map = dict(zip(flatten_df.columns, ['index', 'columnType', 'description', 'maximumSize', 'name', 'valueDescription', 'value', 'source', 'module']))
+            #flatten_df.rename(columns = columns_map, inplace = True)
+            print(flatten_df)
+        
+
         flatten_df.set_index(flatten_df['name'], inplace=True)
         flatten_vals.append(flatten_df)
 
     flatten_vals.append(empty_vals)
-    module_df = pd.concat(flatten_vals)
+    module_df = pd.concat(flatten_vals, sort = False)
     module_df = module_df.rename(columns={'name': 'key'})
     return module_df
 

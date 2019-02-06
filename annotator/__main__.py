@@ -9,6 +9,7 @@ import subprocess
 import os
 import sys
 import json
+import ssl
 import six
 import argparse
 import getpass
@@ -102,12 +103,13 @@ def json2table(args, syn):
         all_modules.append(module_df)
 
     # concat the list of all normalized dataframes into one annotation dataframe
-    all_modules_df = pandas.concat(all_modules)
+    all_modules_df = pandas.concat(all_modules, sort = False)
 
     # re-arrange columns/fields and sort data.
     all_modules_df = all_modules_df[annotation_schema]
     all_modules_df.sort_values(key, ascending=[True, True, True], inplace=True)
-    all_modules_df.valueDescription = all_modules_df.valueDescription.str.encode('utf-8')
+    # no need for line below on python3/pandas > 20.0
+    #all_modules_df.valueDescription = all_modules_df.valueDescription.str.encode('utf-8')
 
     updateTable(syn, tableSynId=tableSynId, newTable=all_modules_df, releaseVersion=releaseVersion)
 
@@ -244,6 +246,16 @@ def _getAnnotationKey(dirs):
 
         for directory in dirs:
 
+            # try to circumvent a SSL certificate verification failure; not optimal but saves from 
+            # somewhat obscure errors; in this case we trust ourselves... with a warning
+            if (not os.environ.get('PYTHONHTTPSVERIFY', '') and getattr(ssl, '_create_unverified_context', None)): 
+                print()
+                print("WARNING: CERTIFICATE VERIFICATION FAILURE. This is probably benign and due to outdated openssl installation. Please upgrade your openssl package to the latest version (may require a pip/conda update).")
+                print("Proceeding despite the warning (default behavior in this version).")
+                print()
+
+                ssl._create_default_https_context = ssl._create_unverified_context
+            
             if urlparse(directory).scheme != '':
                 jfile = urlopen(directory)
             else:
@@ -430,6 +442,7 @@ def performMain(args, syn):
 
 
 def main():
+
     args = buildParser().parse_args()
     syn = synapseLogin()
 
